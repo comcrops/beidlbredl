@@ -3,11 +3,25 @@
   import { kioskState } from '$lib/stores/kiosk';
   import { generalSocket, appsSocket, connectSockets } from '$lib/socket';
   import { apps, getApp } from '$lib/appRegistry';
+  import { getToken, login } from '$lib/auth';
+  import { fetchUser, userStore } from '$lib/stores/user';
+  import { goto } from '$app/navigation';
 
   let launcherOpen = false;
 
-  onMount(() => {
-    connectSockets();
+  onMount(async () => {
+    const token = getToken();
+    if (!token) {
+      login('/mobile');
+      return;
+    }
+    const user = await fetchUser(token).catch(() => null);
+    if (!user) {
+      goto('/setup?return=/mobile');
+      return;
+    }
+    userStore.set(user);
+    connectSockets({ token });
   });
 
   function openApp(appId: string) {
@@ -32,7 +46,12 @@
 
 <div class="mobile-controller">
   <header>
-    <h1>Beidlboard</h1>
+    <div class="header-left">
+      <h1>Beidlboard</h1>
+      {#if $userStore}
+        <span class="username">{$userStore.username}</span>
+      {/if}
+    </div>
     <div class="header-right">
       <button
         class="lock-btn"
@@ -376,5 +395,16 @@
   @keyframes slide-up {
     from { transform: translateY(100%); }
     to   { transform: translateY(0); }
+  }
+
+  .header-left {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .username {
+    font-size: 0.8rem;
+    color: #666;
   }
 </style>

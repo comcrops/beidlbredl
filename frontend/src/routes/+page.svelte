@@ -1,8 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { kioskState } from '$lib/stores/kiosk';
   import { connectSockets, generalSocket } from '$lib/socket';
   import { getApp } from '$lib/appRegistry';
+  import { getToken, login } from '$lib/auth';
+  import { fetchUser, userStore } from '$lib/stores/user';
 
   let idleTimer: ReturnType<typeof setTimeout>;
   let idleKey = 0;
@@ -20,10 +23,29 @@
     resetIdleTimer();
   }
 
-  onMount(() => {
-    connectSockets();
+  onMount(async () => {
+    const kioskSecret = import.meta.env.VITE_KIOSK_SECRET as string | undefined;
+
+    if (kioskSecret) {
+      connectSockets({ kiosk_secret: kioskSecret });
+    } else {
+      const token = getToken();
+      if (!token) {
+        login(location.pathname);
+        return;
+      }
+      const user = await fetchUser(token).catch(() => null);
+      if (!user) {
+        goto(`/setup?return=${encodeURIComponent(location.pathname)}`);
+        return;
+      }
+      userStore.set(user);
+      connectSockets({ token });
+    }
+
     generalSocket.on('state', resetIdleTimer);
     resetIdleTimer();
+
     return () => {
       clearTimeout(idleTimer);
       generalSocket.off('state', resetIdleTimer);

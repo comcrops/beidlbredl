@@ -30,10 +30,10 @@
 <div class="mobile-controller">
   <header>
     <h1>Beidlboard</h1>
-    {#if $kioskState.activeAppId}
+    {#if activeApp}
       <span class="active-label">
-        {getApp($kioskState.activeAppId)?.icon}
-        {getApp($kioskState.activeAppId)?.name}
+        {activeApp.icon}
+        {activeApp.name}
       </span>
     {/if}
   </header>

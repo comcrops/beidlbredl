@@ -1,6 +1,8 @@
 import type { Component } from 'svelte';
 import HelloWorldDisplay from '../apps/hello-world/Display.svelte';
 import HelloWorldMobileControls from '../apps/hello-world/MobileControls.svelte';
+import RotAppDisplay from '../apps/rot-app/Display.svelte';
+import BlauAppDisplay from '../apps/blau-app/Display.svelte';
 
 export interface AppDefinition {
   id: string;
@@ -19,6 +21,20 @@ export const apps: AppDefinition[] = [
     hasMobileControls: true,
     display: HelloWorldDisplay,
     mobileControls: HelloWorldMobileControls,
+  },
+  {
+    id: 'rot-app',
+    name: 'Rote App',
+    icon: '🔴',
+    hasMobileControls: false,
+    display: RotAppDisplay,
+  },
+  {
+    id: 'blau-app',
+    name: 'Blaue App',
+    icon: '🔵',
+    hasMobileControls: false,
+    display: BlauAppDisplay,
   },
 ];
 

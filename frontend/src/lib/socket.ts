@@ -8,10 +8,11 @@ export const appsSocket = io(`${BASE_URL}/apps`, { autoConnect: false });
 
 generalSocket.on(
   'state',
-  (state: { active_app_id: string | null; open_app_ids: string[] }) => {
+  (state: { active_app_id: string | null; open_app_ids: string[]; locked: boolean }) => {
     kioskState.set({
       activeAppId: state.active_app_id,
       openAppIds: state.open_app_ids,
+      locked: state.locked,
     });
   }
 );

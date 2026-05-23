@@ -7,7 +7,7 @@ import apps.hello_world.routes as hw_routes
 def _pb_list(messages):
     m = MagicMock()
     m.ok = True
-    m.json.return_value = {'items': [{'text': t} for t in messages]}
+    m.json.return_value = {'items': [{'text': t, 'sender': ''} for t in messages]}
     return m
 
 
@@ -19,11 +19,9 @@ def _pb_ok():
 
 
 @pytest.fixture(autouse=True)
-def reset_collection_flag():
-    # skip provisioning in tests — we test socket behaviour, not PocketBase setup
-    hw_routes._collection_ready = True
-    yield
-    hw_routes._collection_ready = True
+def skip_pb_setup():
+    with patch('pocketbase.ensure_collection'):
+        yield
 
 
 @pytest.fixture
@@ -38,7 +36,7 @@ def test_update_message_broadcasts_messages_list(socket_client):
         received = socket_client.get_received('/apps')
     event = next((e for e in received if e['name'] == 'hello_world:messages_updated'), None)
     assert event is not None
-    assert 'Oida!' in event['args'][0]['messages']
+    assert any(m['text'] == 'Oida!' for m in event['args'][0]['messages'])
 
 
 def test_empty_message_ignored(socket_client):
@@ -54,7 +52,8 @@ def test_request_messages_returns_list(socket_client):
         socket_client.emit('hello_world:request_messages', namespace='/apps')
         received = socket_client.get_received('/apps')
     event = next(e for e in received if e['name'] == 'hello_world:messages_updated')
-    assert event['args'][0]['messages'] == ['Hawedere!', 'Servas!']
+    texts = [m['text'] for m in event['args'][0]['messages']]
+    assert texts == ['Hawedere!', 'Servas!']
 
 
 def test_newest_message_first_in_response(socket_client):
@@ -64,4 +63,4 @@ def test_newest_message_first_in_response(socket_client):
         socket_client.emit('hello_world:update_message', {'message': 'Neu'}, namespace='/apps')
         received = socket_client.get_received('/apps')
     event = next(e for e in received if e['name'] == 'hello_world:messages_updated')
-    assert event['args'][0]['messages'][0] == 'Neu'
+    assert event['args'][0]['messages'][0]['text'] == 'Neu'

@@ -1,8 +1,6 @@
 import os
 import logging
 
-import jwt
-
 import users
 from auth import decode_token
 

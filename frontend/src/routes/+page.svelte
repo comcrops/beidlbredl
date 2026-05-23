@@ -24,6 +24,20 @@
       <p>Koa App offen. Mach oan auf mit deim Handy!</p>
     </div>
   {/if}
+
+  {#if $kioskState.openAppIds.length > 0}
+    <div class="carousel-bar">
+      {#each $kioskState.openAppIds as appId (appId)}
+        {@const app = getApp(appId)}
+        {#if app}
+          <div class="carousel-pill" class:active={appId === $kioskState.activeAppId}>
+            <span class="pill-icon">{app.icon}</span>
+            <span class="pill-name">{app.name}</span>
+          </div>
+        {/if}
+      {/each}
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -50,7 +64,8 @@
   }
 
   .app-slot.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
   }
 
   .empty-state {
@@ -60,5 +75,50 @@
     height: 100%;
     font-size: 1.5rem;
     color: #666;
+  }
+
+  /* Carousel indicator */
+
+  .carousel-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .carousel-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+
+  .carousel-pill.active {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.5);
+    color: #fff;
+  }
+
+  .pill-icon {
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+
+  .pill-name {
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
   }
 </style>

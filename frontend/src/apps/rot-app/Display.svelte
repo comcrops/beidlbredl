@@ -11,20 +11,20 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: #1a0000;
+    background: #7a0000;
     gap: 1rem;
   }
 
   h1 {
     font-size: clamp(2rem, 6vw, 5rem);
-    color: #ff4444;
+    color: #fff;
     margin: 0;
     text-align: center;
   }
 
   p {
     font-size: clamp(1rem, 2vw, 1.5rem);
-    color: #884444;
+    color: #ffaaaa;
     margin: 0;
   }
 </style>

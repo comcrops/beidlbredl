@@ -3,7 +3,9 @@ from extensions import socketio
 import requests
 import os
 import time
+import logging
 
+log = logging.getLogger(__name__)
 bp = Blueprint('hello_world', __name__)
 
 PB_URL = os.environ.get('POCKETBASE_URL', 'http://pocketbase:8090')
@@ -18,27 +20,32 @@ def _admin_token() -> str | None:
     if not email or not password:
         return None
 
-    # Try authenticating with existing account
     resp = requests.post(
-        f'{PB_URL}/api/admins/auth-with-password',
+        f'{PB_URL}/api/collections/_superusers/auth-with-password',
         json={'identity': email, 'password': password},
         timeout=5,
     )
     if resp.ok:
+        log.warning('PocketBase superuser auth OK')
         return resp.json().get('token')
 
-    # No admin yet — bootstrap first admin account (only works when zero admins exist)
+    log.warning('PocketBase superuser auth failed (%s), trying bootstrap', resp.status_code)
+    # No superuser yet — bootstrap first superuser (only works when zero superusers exist)
     requests.post(
-        f'{PB_URL}/api/admins',
+        f'{PB_URL}/api/collections/_superusers/records',
         json={'email': email, 'password': password, 'passwordConfirm': password},
         timeout=5,
     )
     resp = requests.post(
-        f'{PB_URL}/api/admins/auth-with-password',
+        f'{PB_URL}/api/collections/_superusers/auth-with-password',
         json={'identity': email, 'password': password},
         timeout=5,
     )
-    return resp.json().get('token') if resp.ok else None
+    if resp.ok:
+        log.warning('PocketBase bootstrap + auth OK')
+        return resp.json().get('token')
+    log.error('PocketBase superuser auth failed after bootstrap: %s %s', resp.status_code, resp.text)
+    return None
 
 
 def _ensure_collection():
@@ -49,23 +56,27 @@ def _ensure_collection():
         try:
             token = _admin_token()
             if not token:
-                _collection_ready = True
+                log.error('No PocketBase admin token — skipping collection setup')
                 return
-            headers = {'Authorization': token}
+            headers = {'Authorization': f'Bearer {token}'}
             check = requests.get(
                 f'{PB_URL}/api/collections/{PB_COLLECTION}',
                 headers=headers,
                 timeout=5,
             )
             if check.status_code == 404:
-                requests.post(
+                log.warning('Collection %s not found, creating...', PB_COLLECTION)
+                r = requests.post(
                     f'{PB_URL}/api/collections',
                     headers=headers,
                     timeout=5,
                     json={
                         'name': PB_COLLECTION,
                         'type': 'base',
-                        'schema': [{'name': 'text', 'type': 'text', 'required': True, 'options': {}}],
+                        'fields': [
+                            {'name': 'text', 'type': 'text', 'required': True},
+                            {'name': 'created', 'type': 'autodate', 'onCreate': True, 'onUpdate': False},
+                        ],
                         'listRule': '',
                         'viewRule': '',
                         'createRule': '',
@@ -73,12 +84,17 @@ def _ensure_collection():
                         'deleteRule': None,
                     },
                 )
+                log.warning('Collection create response: %s %s', r.status_code, r.text)
+            else:
+                log.warning('Collection %s check: %s', PB_COLLECTION, check.status_code)
             _collection_ready = True
             return
-        except Exception:
+        except Exception as e:
+            log.warning('_ensure_collection attempt %d failed: %s', attempt, e)
             if attempt < 5:
                 time.sleep(3)
-    _collection_ready = True  # give up, try record ops anyway
+    log.error('_ensure_collection gave up after 6 attempts')
+    _collection_ready = True
 
 
 def _recent_messages(limit: int = 20) -> list[str]:
@@ -86,26 +102,29 @@ def _recent_messages(limit: int = 20) -> list[str]:
     try:
         resp = requests.get(
             f'{PB_URL}/api/collections/{PB_COLLECTION}/records',
-            params={'sort': '-created', 'perPage': limit, 'fields': 'text'},
+            params={'sort': '-created', 'perPage': limit, 'skipTotal': 1},
             timeout=5,
         )
         if resp.ok:
             return [item['text'] for item in resp.json().get('items', [])]
-    except Exception:
-        pass
+        log.warning('_recent_messages failed: %s %s', resp.status_code, resp.text)
+    except Exception as e:
+        log.error('_recent_messages exception: %s', e)
     return []
 
 
 def _save_message(text: str):
     _ensure_collection()
     try:
-        requests.post(
+        r = requests.post(
             f'{PB_URL}/api/collections/{PB_COLLECTION}/records',
             json={'text': text},
             timeout=5,
         )
-    except Exception:
-        pass
+        if not r.ok:
+            log.warning('_save_message failed: %s %s', r.status_code, r.text)
+    except Exception as e:
+        log.error('_save_message exception: %s', e)
 
 
 @socketio.on('hello_world:update_message', namespace='/apps')

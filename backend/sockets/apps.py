@@ -2,4 +2,5 @@ from flask_socketio import Namespace
 
 
 class AppsNamespace(Namespace):
-    pass
+    def on_connect(self):
+        pass

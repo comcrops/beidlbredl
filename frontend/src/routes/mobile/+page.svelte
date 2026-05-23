@@ -12,74 +12,97 @@
 
   function openApp(appId: string) {
     generalSocket.emit('open_app', { app_id: appId });
+    launcherOpen = false;
   }
 
   function closeApp(appId: string) {
     generalSocket.emit('close_app', { app_id: appId });
   }
 
-  function carouselPrev() {
-    generalSocket.emit('carousel_prev');
+  function openInKiosk(appId: string) {
+    generalSocket.emit('open_app', { app_id: appId });
   }
 
-  function carouselNext() {
-    generalSocket.emit('carousel_next');
+  function toggleLock() {
+    generalSocket.emit('toggle_lock');
   }
 
-  $: activeApp = $kioskState.activeAppId ? getApp($kioskState.activeAppId) : null;
+  $: closedApps = apps.filter(a => !$kioskState.openAppIds.includes(a.id));
 </script>
 
 <div class="mobile-controller">
   <header>
     <h1>Beidlboard</h1>
     <div class="header-right">
-      {#if activeApp}
-        <span class="active-label">{activeApp.icon} {activeApp.name}</span>
-      {/if}
-      <button class="launcher-btn" on:click={() => launcherOpen = true} aria-label="Apps öffnen">
+      <button
+        class="lock-btn"
+        class:locked={$kioskState.locked}
+        on:click={toggleLock}
+        aria-label={$kioskState.locked ? 'Entsperren' : 'Sperren'}
+      >
+        {$kioskState.locked ? '🔒' : '🔓'}
+      </button>
+      <button class="launcher-btn" on:click={() => (launcherOpen = true)} aria-label="Apps öffnen">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-          <rect x="2" y="2" width="6" height="6" rx="1.5"/>
-          <rect x="12" y="2" width="6" height="6" rx="1.5"/>
-          <rect x="2" y="12" width="6" height="6" rx="1.5"/>
-          <rect x="12" y="12" width="6" height="6" rx="1.5"/>
+          <rect x="2" y="2" width="6" height="6" rx="1.5" />
+          <rect x="12" y="2" width="6" height="6" rx="1.5" />
+          <rect x="2" y="12" width="6" height="6" rx="1.5" />
+          <rect x="12" y="12" width="6" height="6" rx="1.5" />
         </svg>
       </button>
     </div>
   </header>
 
-  <div class="general-controls">
-    <button on:click={carouselPrev} disabled={$kioskState.openAppIds.length < 2}>←</button>
-    <button on:click={carouselNext} disabled={$kioskState.openAppIds.length < 2}>→</button>
-  </div>
+  <div class="app-cards">
+    {#each $kioskState.openAppIds as appId (appId)}
+      {@const app = getApp(appId)}
+      {#if app}
+        <div class="app-card">
+          <div class="card-header">
+            <span class="app-identity">{app.icon} {app.name}</span>
+            <div class="card-actions">
+              <button class="kiosk-btn" on:click={() => openInKiosk(appId)}>Am Kiosk zeigen</button>
+              <button class="close-btn" on:click={() => closeApp(appId)}>Schließen</button>
+            </div>
+          </div>
+          {#if app.hasMobileControls && app.mobileControls}
+            <div class="card-controls">
+              <svelte:component this={app.mobileControls} socket={appsSocket} />
+            </div>
+          {/if}
+        </div>
+      {/if}
+    {/each}
 
-  {#if activeApp?.hasMobileControls && activeApp.mobileControls}
-    <div class="app-controls">
-      <svelte:component this={activeApp.mobileControls} socket={appsSocket} />
-    </div>
-  {/if}
+    {#if $kioskState.openAppIds.length === 0}
+      <div class="empty-state">
+        <p>Koa App offen. Tipp ⊞ zum Aufmachen!</p>
+      </div>
+    {/if}
+  </div>
 </div>
 
 <!-- Launcher overlay -->
 {#if launcherOpen}
   <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-  <div class="backdrop" on:click={() => launcherOpen = false}></div>
+  <div class="backdrop" on:click={() => (launcherOpen = false)}></div>
   <div class="launcher-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <span>Apps</span>
-      <button class="close-sheet-btn" on:click={() => launcherOpen = false}>✕</button>
+      <button class="close-sheet-btn" on:click={() => (launcherOpen = false)}>✕</button>
     </div>
     <div class="app-list">
-      {#each apps as app}
-        <div class="app-item">
-          <span class="app-label">{app.icon} {app.name}</span>
-          {#if $kioskState.openAppIds.includes(app.id)}
-            <button class="close-btn" on:click={() => { closeApp(app.id); }}>Schließen</button>
-          {:else}
-            <button class="open-btn" on:click={() => { openApp(app.id); launcherOpen = false; }}>Öffnen</button>
-          {/if}
-        </div>
-      {/each}
+      {#if closedApps.length === 0}
+        <p class="all-open">Alle Apps offen</p>
+      {:else}
+        {#each closedApps as app}
+          <div class="app-item">
+            <span class="app-label">{app.icon} {app.name}</span>
+            <button class="open-btn" on:click={() => openApp(app.id)}>Öffnen</button>
+          </div>
+        {/each}
+      {/if}
     </div>
   </div>
 {/if}
@@ -113,12 +136,31 @@
   .header-right {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
-  .active-label {
-    font-size: 0.85rem;
-    color: #aaa;
+  .lock-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .lock-btn.locked {
+    background: #3a2a1a;
+    border-color: #8a5a2a;
+  }
+
+  .lock-btn:hover {
+    background: #333;
   }
 
   .launcher-btn {
@@ -141,40 +183,86 @@
     color: #fff;
   }
 
-  .general-controls {
+  /* App cards */
+
+  .app-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .app-card {
+    background: #242424;
+    border: 1px solid #333;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .app-identity {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .card-actions {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+    flex-shrink: 0;
   }
 
-  .general-controls button {
-    flex: 1;
-    padding: 0.75rem;
-    font-size: 1.5rem;
-    background: #333;
+  .kiosk-btn {
+    padding: 0.35rem 0.75rem;
+    background: #1d4ed8;
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background 0.15s;
+    font-size: 0.85rem;
+    transition: opacity 0.15s;
+    white-space: nowrap;
   }
 
-  .general-controls button:hover:not(:disabled) {
-    background: #444;
+  .kiosk-btn:hover {
+    opacity: 0.85;
   }
 
-  .general-controls button:disabled {
-    opacity: 0.3;
-    cursor: default;
+  .close-btn {
+    padding: 0.35rem 0.75rem;
+    background: #6a2d2d;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: opacity 0.15s;
+    white-space: nowrap;
   }
 
-  .app-controls {
-    padding: 1rem;
-    background: #2a2a2a;
-    border-radius: 8px;
+  .close-btn:hover {
+    opacity: 0.85;
   }
 
-  /* Overlay */
+  .card-controls {
+    padding: 0 1rem 1rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #555;
+    font-size: 1rem;
+  }
+
+  /* Launcher overlay */
 
   .backdrop {
     position: fixed;
@@ -242,6 +330,13 @@
     padding: 0 1.25rem 1.5rem;
   }
 
+  .all-open {
+    text-align: center;
+    color: #666;
+    padding: 1.5rem 0;
+    font-size: 0.95rem;
+  }
+
   .app-item {
     display: flex;
     align-items: center;
@@ -258,8 +353,10 @@
     font-size: 1rem;
   }
 
-  .open-btn, .close-btn {
+  .open-btn {
     padding: 0.4rem 1rem;
+    background: #2d6a4f;
+    color: #fff;
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -267,12 +364,9 @@
     transition: opacity 0.15s;
   }
 
-  .open-btn:hover, .close-btn:hover {
+  .open-btn:hover {
     opacity: 0.85;
   }
-
-  .open-btn { background: #2d6a4f; color: #fff; }
-  .close-btn { background: #6a2d2d; color: #fff; }
 
   @keyframes fade-in {
     from { opacity: 0; }

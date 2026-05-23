@@ -17,7 +17,13 @@ services:
       - pocketbase_data:/pb/pb_data
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_AUTHENTIK_URL: ${AUTHENTIK_URL}
+        VITE_AUTHENTIK_APP_SLUG: ${AUTHENTIK_APP_SLUG}
+        VITE_AUTHENTIK_CLIENT_ID: ${AUTHENTIK_CLIENT_ID}
+        VITE_KIOSK_SECRET: ${KIOSK_SECRET:-}
     ports:
       - "0.0.0.0:8080:80"
     depends_on:

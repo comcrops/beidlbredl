@@ -17,7 +17,7 @@ def reset_state():
 
 @pytest.fixture
 def socket_client(flask_app):
-    return socketio.test_client(flask_app, namespace='/general')
+    return socketio.test_client(flask_app, namespace='/general', auth={'kiosk_secret': 'test-kiosk-secret'})
 
 
 def test_connect_receives_initial_state(socket_client):

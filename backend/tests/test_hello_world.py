@@ -26,7 +26,7 @@ def skip_pb_setup():
 
 @pytest.fixture
 def socket_client(flask_app):
-    return socketio.test_client(flask_app, namespace='/apps')
+    return socketio.test_client(flask_app, namespace='/apps', auth={'kiosk_secret': 'test-kiosk-secret'})
 
 
 def test_update_message_broadcasts_messages_list(socket_client):

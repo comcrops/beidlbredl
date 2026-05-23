@@ -1,10 +1,18 @@
 from flask_socketio import Namespace, emit
+from flask import request
 from state import kiosk_state
+from sockets.middleware import authenticate_socket, clear_session
 
 
 class GeneralNamespace(Namespace):
-    def on_connect(self):
+    def on_connect(self, auth=None):
+        session = authenticate_socket(auth or {}, request.sid)
+        if session is None:
+            return False
         emit('state', kiosk_state.to_dict())
+
+    def on_disconnect(self):
+        clear_session(request.sid)
 
     def on_open_app(self, data):
         app_id = data.get('app_id')

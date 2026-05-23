@@ -5,7 +5,7 @@ from extensions import socketio
 
 @pytest.fixture
 def socket_client(flask_app):
-    return socketio.test_client(flask_app, namespace='/apps')
+    return socketio.test_client(flask_app, namespace='/apps', auth={'kiosk_secret': 'test-kiosk-secret'})
 
 
 def test_connect_succeeds(socket_client):

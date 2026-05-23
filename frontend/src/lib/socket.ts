@@ -17,7 +17,9 @@ generalSocket.on(
   }
 );
 
-export function connectSockets(): void {
+export function connectSockets(auth: Record<string, string>): void {
+  generalSocket.auth = auth;
+  appsSocket.auth = auth;
   generalSocket.connect();
   appsSocket.connect();
 }

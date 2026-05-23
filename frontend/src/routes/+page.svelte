@@ -48,7 +48,7 @@
   {/if}
 
   {#if $kioskState.openAppIds.length > 0}
-    <div class="carousel-bar">
+    <div class="carousel-bar" class:idle-active={!$kioskState.locked && $kioskState.openAppIds.length >= 2}>
       {#key idleKey}
         {#each $kioskState.openAppIds as appId (appId)}
           {@const app = getApp(appId)}
@@ -137,7 +137,7 @@
     color: #fff;
   }
 
-  .carousel-pill.active::after {
+  .carousel-bar.idle-active .carousel-pill.active::after {
     content: '';
     position: absolute;
     inset: -1px;

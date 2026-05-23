@@ -22,7 +22,10 @@
     connectSockets();
     generalSocket.on('state', resetIdleTimer);
     resetIdleTimer();
-    return () => clearTimeout(idleTimer);
+    return () => {
+      clearTimeout(idleTimer);
+      generalSocket.off('state', resetIdleTimer);
+    };
   });
 </script>
 

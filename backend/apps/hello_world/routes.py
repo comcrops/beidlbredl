@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint
 from extensions import socketio
 import requests
 import os
@@ -62,19 +62,17 @@ def handle_update_message(data):
     if not message:
         return
     _save_message(message)
-    msgs = _recent_messages()
     socketio.emit(
         'hello_world:messages_updated',
-        {'messages': [{'text': m['text'], 'sender': m['sender']} for m in msgs]},
+        {'messages': _recent_messages()},
         namespace='/apps',
     )
 
 
 @socketio.on('hello_world:request_messages', namespace='/apps')
 def handle_request_messages():
-    msgs = _recent_messages()
     socketio.emit(
         'hello_world:messages_updated',
-        {'messages': [{'text': m['text'], 'sender': m['sender']} for m in msgs]},
+        {'messages': _recent_messages()},
         namespace='/apps',
     )

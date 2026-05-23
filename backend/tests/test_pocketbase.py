@@ -10,9 +10,11 @@ import pocketbase
 def clear_token_cache():
     pocketbase._token_cache = None
     pocketbase._token_fetched_at = 0
+    pocketbase._collection_ready = set()
     yield
     pocketbase._token_cache = None
     pocketbase._token_fetched_at = 0
+    pocketbase._collection_ready = set()
 
 
 def _ok_auth():

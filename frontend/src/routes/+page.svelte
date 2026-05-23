@@ -48,7 +48,7 @@
   {/if}
 
   {#if $kioskState.openAppIds.length > 0}
-    <div class="carousel-bar" class:idle-active={!$kioskState.locked && $kioskState.openAppIds.length >= 2}>
+    <div class="carousel-bar" class:idle-active={!$kioskState.locked && $kioskState.openAppIds.length >= 2} class:locked={$kioskState.locked}>
       {#key idleKey}
         {#each $kioskState.openAppIds as appId (appId)}
           {@const app = getApp(appId)}
@@ -135,6 +135,12 @@
     background: rgba(255,255,255,0.2);
     border-color: rgba(255,255,255,0.3);
     color: #fff;
+  }
+
+  .carousel-bar.locked .carousel-pill.active {
+    background: rgba(138, 90, 42, 0.3);
+    border-color: rgba(138, 90, 42, 0.8);
+    color: #f5c98a;
   }
 
   .carousel-bar.idle-active .carousel-pill.active::after {

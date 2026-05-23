@@ -29,7 +29,9 @@ class GeneralNamespace(Namespace):
         if kiosk_state.locked:
             return
         app_id = data.get('app_id')
-        if app_id and app_id not in kiosk_state.open_app_ids:
+        if not app_id:
+            return
+        if app_id not in kiosk_state.open_app_ids:
             kiosk_state.open_app_ids.append(app_id)
         kiosk_state.active_app_id = app_id
         self._broadcast_state()

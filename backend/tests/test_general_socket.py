@@ -107,3 +107,12 @@ def test_focus_request_no_op_when_locked(socket_client):
     socket_client.emit('focus_request', {'app_id': 'rot-app'}, namespace='/general')
     received = socket_client.get_received('/general')
     assert not any(e['name'] == 'state' for e in received)
+
+
+def test_focus_request_no_op_when_app_id_missing(socket_client):
+    socket_client.get_received('/general')
+    socket_client.emit('open_app', {'app_id': 'hello-world'}, namespace='/general')
+    socket_client.get_received('/general')
+    socket_client.emit('focus_request', {}, namespace='/general')
+    received = socket_client.get_received('/general')
+    assert not any(e['name'] == 'state' for e in received)

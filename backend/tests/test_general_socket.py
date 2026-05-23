@@ -8,9 +8,11 @@ from state import kiosk_state
 def reset_state():
     kiosk_state.active_app_id = None
     kiosk_state.open_app_ids = []
+    kiosk_state.locked = False
     yield
     kiosk_state.active_app_id = None
     kiosk_state.open_app_ids = []
+    kiosk_state.locked = False
 
 
 @pytest.fixture
@@ -25,6 +27,7 @@ def test_connect_receives_initial_state(socket_client):
     data = received[0]['args'][0]
     assert data['active_app_id'] is None
     assert data['open_app_ids'] == []
+    assert data['locked'] is False
 
 
 def test_open_app_updates_state(socket_client):

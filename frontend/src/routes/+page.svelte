@@ -1,11 +1,28 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { kioskState } from '$lib/stores/kiosk';
-  import { connectSockets } from '$lib/socket';
+  import { connectSockets, generalSocket } from '$lib/socket';
   import { getApp } from '$lib/appRegistry';
+
+  let idleTimer: ReturnType<typeof setTimeout>;
+
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(onIdle, 10_000);
+  }
+
+  function onIdle() {
+    if (!$kioskState.locked && $kioskState.openAppIds.length >= 2) {
+      generalSocket.emit('carousel_next');
+    }
+    resetIdleTimer();
+  }
 
   onMount(() => {
     connectSockets();
+    generalSocket.on('state', resetIdleTimer);
+    resetIdleTimer();
+    return () => clearTimeout(idleTimer);
   });
 </script>
 

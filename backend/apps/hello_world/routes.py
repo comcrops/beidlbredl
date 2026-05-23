@@ -61,7 +61,11 @@ def handle_update_message(data):
     message = data.get('message', '').strip()
     if not message:
         return
-    _save_message(message)
+    from flask import request
+    from sockets.middleware import get_session
+    session = get_session(request.sid)
+    sender = session.get('username', '') if session else ''
+    _save_message(message, sender)
     socketio.emit(
         'hello_world:messages_updated',
         {'messages': _recent_messages()},

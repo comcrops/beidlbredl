@@ -56,6 +56,16 @@ def test_request_messages_returns_list(socket_client):
     assert texts == ['Hawedere!', 'Servas!']
 
 
+def test_sender_attached_from_session(socket_client):
+    with patch('apps.hello_world.routes.requests.post', return_value=_pb_ok()), \
+         patch('apps.hello_world.routes.requests.get', return_value=_pb_list(['Hoi'])):
+        socket_client.emit('hello_world:update_message', {'message': 'Hoi'}, namespace='/apps')
+        received = socket_client.get_received('/apps')
+    event = next(e for e in received if e['name'] == 'hello_world:messages_updated')
+    # sender comes from session set up by authenticate_socket in the fixture
+    assert 'sender' in event['args'][0]['messages'][0]
+
+
 def test_newest_message_first_in_response(socket_client):
     messages = ['Neu', 'Alt']
     with patch('apps.hello_world.routes.requests.post', return_value=_pb_ok()), \

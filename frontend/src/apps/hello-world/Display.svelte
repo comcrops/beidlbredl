@@ -2,9 +2,15 @@
   import { onMount, onDestroy } from 'svelte';
   import { appsSocket } from '$lib/socket';
 
+  interface Message {
+    text: string;
+    sender: string;
+  }
+
   interface Bubble {
     id: number;
     text: string;
+    sender: string;
     left: number;
     top: number;
     dur: number;
@@ -14,12 +20,12 @@
     scale: number;
   }
 
-  let messages: string[] = [];
+  let messages: Message[] = [];
   let bubbles: Bubble[] = [];
   let nextId = 0;
   let spawnTimer: ReturnType<typeof setInterval>;
 
-  function weightedPick(): string | null {
+  function weightedPick(): Message | null {
     if (!messages.length) return null;
     // weight[i] = 1/(i+1): index 0 (newest) is 2x more likely than index 1, 3x more than index 2, etc.
     const weights = messages.map((_, i) => 1 / (i + 1));
@@ -33,15 +39,16 @@
   }
 
   function spawnBubble() {
-    const text = weightedPick();
-    if (!text || bubbles.length >= 6) return;
+    const msg = weightedPick();
+    if (!msg || bubbles.length >= 6) return;
     const id = nextId++;
     const dur = 12 + Math.random() * 7;
     bubbles = [
       ...bubbles,
       {
         id,
-        text,
+        text: msg.text,
+        sender: msg.sender,
         left: 4 + Math.random() * 68,
         top: 10 + Math.random() * 62,
         dur,
@@ -56,8 +63,8 @@
     }, dur * 1000);
   }
 
-  function handleMessages(data: { messages: string[] }) {
-    const isNewMessage = data.messages[0] !== messages[0];
+  function handleMessages(data: { messages: Message[] }) {
+    const isNewMessage = data.messages[0]?.text !== messages[0]?.text;
     messages = data.messages;
     if (isNewMessage && messages.length) spawnBubble();
   }
@@ -89,7 +96,10 @@
         --scale: {bubble.scale};
       "
     >
-      {bubble.text}
+      <div class="bubble-text">{bubble.text}</div>
+      {#if bubble.sender}
+        <div class="bubble-sender">— {bubble.sender}</div>
+      {/if}
     </div>
   {/each}
 
@@ -116,10 +126,20 @@
     border-radius: 20px;
     font-size: clamp(0.8rem, 1.4vw, 1.05rem);
     font-weight: 500;
-    line-height: 1.45;
     box-shadow: 0 6px 28px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.15);
     pointer-events: none;
     animation: bubble-float var(--dur) ease-in-out forwards;
+  }
+
+  .bubble-text {
+    line-height: 1.45;
+  }
+
+  .bubble-sender {
+    font-size: 0.75em;
+    color: #555;
+    margin-top: 0.3rem;
+    text-align: right;
   }
 
   /* thought bubble tail: two decreasing circles */

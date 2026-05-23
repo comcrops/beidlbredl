@@ -22,6 +22,9 @@ def create_app(config=None) -> Flask:
     socketio.on_namespace(GeneralNamespace('/general'))
     socketio.on_namespace(AppsNamespace('/apps'))
 
+    from routes.users import bp as users_bp
+    app.register_blueprint(users_bp)
+
     @app.route('/api/health')
     def health():
         return {'status': 'ok'}

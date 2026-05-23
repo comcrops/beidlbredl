@@ -20,9 +20,10 @@ def _pb_ok():
 
 @pytest.fixture(autouse=True)
 def reset_collection_flag():
-    hw_routes._collection_ready = False
+    # skip provisioning in tests — we test socket behaviour, not PocketBase setup
+    hw_routes._collection_ready = True
     yield
-    hw_routes._collection_ready = False
+    hw_routes._collection_ready = True
 
 
 @pytest.fixture

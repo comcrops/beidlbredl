@@ -69,3 +69,41 @@ def test_carousel_prev_cycles_active_app(socket_client):
     received = socket_client.get_received('/general')
     state_event = next(e for e in received if e['name'] == 'state')
     assert state_event['args'][0]['active_app_id'] == 'hello-world'
+
+
+def test_toggle_lock_sets_locked_true(socket_client):
+    socket_client.get_received('/general')
+    socket_client.emit('toggle_lock', namespace='/general')
+    received = socket_client.get_received('/general')
+    state_event = next(e for e in received if e['name'] == 'state')
+    assert state_event['args'][0]['locked'] is True
+
+
+def test_toggle_lock_flips_back_to_false(socket_client):
+    socket_client.get_received('/general')
+    socket_client.emit('toggle_lock', namespace='/general')
+    socket_client.get_received('/general')
+    socket_client.emit('toggle_lock', namespace='/general')
+    received = socket_client.get_received('/general')
+    state_event = next(e for e in received if e['name'] == 'state')
+    assert state_event['args'][0]['locked'] is False
+
+
+def test_focus_request_sets_active_app_and_opens_it(socket_client):
+    socket_client.get_received('/general')
+    socket_client.emit('focus_request', {'app_id': 'rot-app'}, namespace='/general')
+    received = socket_client.get_received('/general')
+    state_event = next(e for e in received if e['name'] == 'state')
+    assert state_event['args'][0]['active_app_id'] == 'rot-app'
+    assert 'rot-app' in state_event['args'][0]['open_app_ids']
+
+
+def test_focus_request_no_op_when_locked(socket_client):
+    socket_client.get_received('/general')
+    socket_client.emit('open_app', {'app_id': 'hello-world'}, namespace='/general')
+    socket_client.get_received('/general')
+    socket_client.emit('toggle_lock', namespace='/general')
+    socket_client.get_received('/general')
+    socket_client.emit('focus_request', {'app_id': 'rot-app'}, namespace='/general')
+    received = socket_client.get_received('/general')
+    assert not any(e['name'] == 'state' for e in received)

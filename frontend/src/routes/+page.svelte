@@ -5,9 +5,11 @@
   import { getApp } from '$lib/appRegistry';
 
   let idleTimer: ReturnType<typeof setTimeout>;
+  let idleKey = 0;
 
   function resetIdleTimer() {
     clearTimeout(idleTimer);
+    idleKey += 1;
     idleTimer = setTimeout(onIdle, 10_000);
   }
 
@@ -47,15 +49,17 @@
 
   {#if $kioskState.openAppIds.length > 0}
     <div class="carousel-bar">
-      {#each $kioskState.openAppIds as appId (appId)}
-        {@const app = getApp(appId)}
-        {#if app}
-          <div class="carousel-pill" class:active={appId === $kioskState.activeAppId}>
-            <span class="pill-icon">{app.icon}</span>
-            <span class="pill-name">{app.name}</span>
-          </div>
-        {/if}
-      {/each}
+      {#key idleKey}
+        {#each $kioskState.openAppIds as appId (appId)}
+          {@const app = getApp(appId)}
+          {#if app}
+            <div class="carousel-pill" class:active={appId === $kioskState.activeAppId}>
+              <span class="pill-icon">{app.icon}</span>
+              <span class="pill-name">{app.name}</span>
+            </div>
+          {/if}
+        {/each}
+      {/key}
     </div>
   {/if}
 </div>
@@ -114,6 +118,7 @@
   }
 
   .carousel-pill {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.35rem;
@@ -128,8 +133,23 @@
 
   .carousel-pill.active {
     background: rgba(255,255,255,0.2);
-    border-color: rgba(255,255,255,0.5);
+    border-color: rgba(255,255,255,0.3);
     color: #fff;
+  }
+
+  .carousel-pill.active::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(255,255,255,0.9);
+    clip-path: inset(0 100% 0 0 round 999px);
+    animation: pill-border-fill 10s linear forwards;
+  }
+
+  @keyframes pill-border-fill {
+    from { clip-path: inset(0 100% 0 0 round 999px); }
+    to   { clip-path: inset(0 0% 0 0 round 999px); }
   }
 
   .pill-icon {

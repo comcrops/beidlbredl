@@ -19,12 +19,12 @@
 </script>
 
 <div class="hello-world-controls">
-  <p>Nachricht ändern</p>
+  <p>Gedanken schicken</p>
   <div class="input-row">
     <input
       bind:value={newMessage}
       on:keydown={handleKeydown}
-      placeholder="Neue Nachricht..."
+      placeholder="Was denkst du...?"
     />
     <button on:click={sendMessage} disabled={!newMessage.trim()}>Schicken</button>
   </div>

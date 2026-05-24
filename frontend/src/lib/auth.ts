@@ -31,7 +31,7 @@ export async function login(returnTo = '/'): Promise<void> {
     code_challenge: challenge,
     code_challenge_method: 'S256',
   });
-  location.href = `${AUTHENTIK_URL}/application/o/${APP_SLUG}/authorize/?${params}`;
+  location.href = `${AUTHENTIK_URL}/application/o/authorize/?${params}`;
 }
 
 export async function handleCallback(): Promise<{ token: string; returnTo: string }> {
@@ -41,7 +41,7 @@ export async function handleCallback(): Promise<{ token: string; returnTo: strin
   if (!verifier) throw new Error('No PKCE verifier in session');
   const returnTo = sessionStorage.getItem('pkce_return_to') ?? '/';
 
-  const resp = await fetch(`${AUTHENTIK_URL}/application/o/${APP_SLUG}/token/`, {
+  const resp = await fetch(`${AUTHENTIK_URL}/application/o/token/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({

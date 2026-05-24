@@ -11,7 +11,7 @@ class GeneralNamespace(Namespace):
             return False
         emit('state', kiosk_state.to_dict())
 
-    def on_disconnect(self):
+    def on_disconnect(self, reason=None):
         clear_session(request.sid)
 
     def on_open_app(self, data):

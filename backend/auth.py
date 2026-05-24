@@ -32,7 +32,7 @@ def decode_token(token: str) -> dict:
     return jwt.decode(
         token,
         signing_key.key,
-        algorithms=['RS256'],
+        algorithms=['RS256', 'ES256'],
         audience=os.environ.get('AUTHENTIK_CLIENT_ID', ''),
     )
 

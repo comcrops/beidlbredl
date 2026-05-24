@@ -9,5 +9,5 @@ class AppsNamespace(Namespace):
         if session is None:
             return False
 
-    def on_disconnect(self):
+    def on_disconnect(self, reason=None):
         clear_session(request.sid)

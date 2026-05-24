@@ -7,7 +7,7 @@ import pocketbase
 log = logging.getLogger(__name__)
 
 PB_URL = os.environ.get('POCKETBASE_URL', 'http://pocketbase:8090')
-_COLLECTION = 'users'
+_COLLECTION = 'bb_users'
 _FIELDS = [
     {'name': 'authentik_sub', 'type': 'text', 'required': True},
     {'name': 'username', 'type': 'text', 'required': True},

@@ -30,3 +30,21 @@ def create_me():
         return jsonify({'username': user['username']}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/api/users/me', methods=['PUT'])
+@require_auth
+def update_me():
+    data = request.get_json() or {}
+    username = data.get('username', '').strip()
+    if len(username) < 3 or len(username) > 20:
+        return jsonify({'error': 'Username must be 3-20 characters'}), 400
+    if not all(c.isalnum() or c == '_' for c in username):
+        return jsonify({'error': 'Username: letters, numbers, underscores only'}), 400
+    try:
+        user = users.update_user(g.user_sub, username)
+        return jsonify({'username': user['username']})
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

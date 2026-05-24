@@ -44,3 +44,20 @@ def create_user(sub: str, username: str) -> dict:
     )
     resp.raise_for_status()
     return resp.json()
+
+
+def update_user(sub: str, username: str) -> dict:
+    _ensure()
+    user = get_user(sub)
+    if not user:
+        raise ValueError('User not found')
+    token = pocketbase.admin_token()
+    headers = {'Authorization': f'Bearer {token}'} if token else {}
+    resp = http.patch(
+        f'{PB_URL}/api/collections/{_COLLECTION}/records/{user["id"]}',
+        json={'username': username},
+        headers=headers,
+        timeout=5,
+    )
+    resp.raise_for_status()
+    return resp.json()

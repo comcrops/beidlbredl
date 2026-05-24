@@ -64,7 +64,7 @@
     <div class="header-left">
       <h1>Beidlboard</h1>
       {#if $userStore}
-        <span class="username">{$userStore.username}</span>
+        <a class="username" href="/profile">{$userStore.username}</a>
       {/if}
     </div>
     <div class="header-right">
@@ -421,5 +421,10 @@
   .username {
     font-size: 0.8rem;
     color: #666;
+    text-decoration: none;
+  }
+
+  .username:hover {
+    color: #aaa;
   }
 </style>

@@ -3,16 +3,22 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { getToken, login } from '$lib/auth';
-  import { createUser, userStore } from '$lib/stores/user';
+  import { createUser, fetchUser, userStore } from '$lib/stores/user';
 
   let username = '';
   let error = '';
   let saving = false;
   let returnTo = '/';
 
-  onMount(() => {
+  onMount(async () => {
     returnTo = $page.url.searchParams.get('return') ?? '/';
-    if (!getToken()) login(returnTo);
+    const token = getToken();
+    if (!token) { await login(returnTo); return; }
+    const user = await fetchUser(token).catch(() => null);
+    if (user) {
+      userStore.set(user);
+      goto(returnTo);
+    }
   });
 
   async function submit(e: Event) {

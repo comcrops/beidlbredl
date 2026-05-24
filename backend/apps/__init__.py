@@ -19,6 +19,12 @@ APP_REGISTRY = [
         'icon': '🔵',
         'has_mobile_controls': False,
     },
+    {
+        'id': 'online-users',
+        'name': 'Wer is da?',
+        'icon': '👥',
+        'has_mobile_controls': False,
+    },
 ]
 
 
@@ -31,3 +37,6 @@ def register_apps(flask_app: Flask) -> None:
 
     from apps.blau_app.routes import bp as blau_app_bp
     flask_app.register_blueprint(blau_app_bp, url_prefix='/api/apps/blau-app')
+
+    from apps.online_users.routes import bp as online_users_bp
+    flask_app.register_blueprint(online_users_bp, url_prefix='/api/apps/online-users')

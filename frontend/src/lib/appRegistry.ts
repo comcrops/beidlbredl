@@ -3,6 +3,7 @@ import HelloWorldDisplay from '../apps/hello-world/Display.svelte';
 import HelloWorldMobileControls from '../apps/hello-world/MobileControls.svelte';
 import RotAppDisplay from '../apps/rot-app/Display.svelte';
 import BlauAppDisplay from '../apps/blau-app/Display.svelte';
+import OnlineUsersDisplay from '../apps/online-users/Display.svelte';
 
 export interface AppDefinition {
   id: string;
@@ -35,6 +36,13 @@ export const apps: AppDefinition[] = [
     icon: '🔵',
     hasMobileControls: false,
     display: BlauAppDisplay,
+  },
+  {
+    id: 'online-users',
+    name: 'Wer is da?',
+    icon: '👥',
+    hasMobileControls: false,
+    display: OnlineUsersDisplay,
   },
 ];
 

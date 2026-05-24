@@ -26,6 +26,7 @@
   let bubbles: Bubble[] = [];
   let nextId = 0;
   let spawnTimer: ReturnType<typeof setInterval>;
+  let avatarCache: Record<string, string | null> = {};
 
   function weightedPick(): Message | null {
     if (!messages.length) return null;
@@ -51,7 +52,7 @@
         id,
         text: msg.text,
         sender: msg.sender,
-        avatar_url: msg.avatar_url ?? null,
+        avatar_url: resolveAvatarUrl(msg),
         left: 4 + Math.random() * 68,
         top: 10 + Math.random() * 62,
         dur,
@@ -66,9 +67,28 @@
     }, dur * 1000);
   }
 
+  async function fetchAvatars(msgs: Message[]) {
+    const senders = [...new Set(msgs.map(m => m.sender).filter(s => s && !(s in avatarCache)))];
+    if (!senders.length) return;
+    try {
+      const resp = await fetch(`/api/users/avatars?usernames=${senders.map(encodeURIComponent).join(',')}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        avatarCache = { ...avatarCache, ...data };
+      }
+    } catch {}
+  }
+
+  function resolveAvatarUrl(msg: Message): string | null {
+    if (msg.avatar_url) return msg.avatar_url;
+    if (msg.sender && msg.sender in avatarCache) return avatarCache[msg.sender];
+    return null;
+  }
+
   function handleMessages(data: { messages: Message[] }) {
     const isNewMessage = data.messages[0]?.text !== messages[0]?.text;
     messages = data.messages;
+    fetchAvatars(messages);
     if (isNewMessage && messages.length) spawnBubble();
   }
 

@@ -54,6 +54,14 @@ def update_me():
         return jsonify({'error': str(e)}), 500
 
 
+@bp.route('/api/users/avatars', methods=['GET'])
+def get_avatars():
+    raw = request.args.get('usernames', '')
+    usernames = [u.strip() for u in raw.split(',') if u.strip()]
+    avatar_map = users.get_avatars_by_usernames(usernames)
+    return jsonify(avatar_map)
+
+
 @bp.route('/api/users/me/avatar', methods=['POST'])
 @require_auth
 def upload_avatar():

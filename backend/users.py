@@ -73,6 +73,25 @@ def update_avatar(sub: str, file_stream, filename: str, content_type: str) -> di
     return resp.json()
 
 
+def get_avatars_by_usernames(usernames: list[str]) -> dict[str, str | None]:
+    if not usernames:
+        return {}
+    _ensure()
+    filter_parts = ' || '.join(f'username="{u}"' for u in usernames)
+    try:
+        resp = http.get(
+            f'{PB_URL}/api/collections/{_COLLECTION}/records',
+            params={'filter': filter_parts, 'perPage': 200, 'skipTotal': 1},
+            timeout=5,
+        )
+        if resp.ok:
+            return {item['username']: avatar_url(item) for item in resp.json().get('items', [])}
+        log.warning('get_avatars_by_usernames failed: %s %s', resp.status_code, resp.text)
+    except Exception as e:
+        log.error('get_avatars_by_usernames exception: %s', e)
+    return {}
+
+
 def update_user(sub: str, username: str) -> dict:
     _ensure()
     user = get_user(sub)

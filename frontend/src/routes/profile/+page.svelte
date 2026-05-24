@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { getToken, login } from '$lib/auth';
+  import { getToken, login, logout } from '$lib/auth';
   import { fetchUser, updateUser, uploadAvatar, userStore } from '$lib/stores/user';
 
   let username = $state('');
@@ -67,6 +67,7 @@
   <header>
     <button class="back-btn" onclick={() => goto(returnTo)}>← Zruck</button>
     <h1>Profil</h1>
+    <button class="logout-btn" onclick={logout}>Abmelden</button>
   </header>
 
   <!-- Avatar section -->
@@ -130,7 +131,7 @@
     margin-bottom: 1.5rem;
   }
 
-  h1 { font-size: 1.25rem; margin: 0; }
+  h1 { font-size: 1.25rem; margin: 0; flex: 1; }
 
   .back-btn {
     background: none;
@@ -141,6 +142,17 @@
     padding: 0;
   }
   .back-btn:hover { color: #fff; }
+
+  .logout-btn {
+    background: none;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #f88;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.3rem 0.75rem;
+  }
+  .logout-btn:hover { background: #2a1111; border-color: #f88; }
 
   .avatar-section {
     display: flex;

@@ -21,6 +21,15 @@ def user_disconnected(username: str) -> None:
     _broadcast()
 
 
+def emit_current(sid: str) -> None:
+    socketio.emit(
+        'online_users:updated',
+        {'users': sorted(_online.keys())},
+        namespace='/apps',
+        to=sid,
+    )
+
+
 def _broadcast() -> None:
     socketio.emit(
         'online_users:updated',

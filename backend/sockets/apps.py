@@ -8,9 +8,11 @@ class AppsNamespace(Namespace):
         session = authenticate_socket(auth or {}, request.sid)
         if session is None:
             return False
+        from apps.online_users.routes import user_connected, emit_current
         if not session.get('is_kiosk'):
-            from apps.online_users.routes import user_connected
             user_connected(session['username'])
+        else:
+            emit_current(request.sid)
 
     def on_disconnect(self, reason=None):
         session = get_session(request.sid)

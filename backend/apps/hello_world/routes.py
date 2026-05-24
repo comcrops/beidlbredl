@@ -23,6 +23,7 @@ _FIELDS = [
 
 def _ensure():
     pocketbase.ensure_collection(PB_COLLECTION, _FIELDS)
+    pocketbase.ensure_field(PB_COLLECTION, {'name': 'avatar_url', 'type': 'text', 'required': False})
 
 
 def _recent_messages(limit: int = 20) -> list[dict]:

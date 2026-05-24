@@ -10,7 +10,7 @@ class AppsNamespace(Namespace):
             return False
         from apps.online_users.routes import user_connected, emit_current
         if not session.get('is_kiosk'):
-            user_connected(session['username'])
+            user_connected(session['username'], session.get('user_sub', ''))
         else:
             emit_current(request.sid)
 

@@ -2,25 +2,32 @@ const AUTHENTIK_URL = import.meta.env.VITE_AUTHENTIK_URL as string;
 const APP_SLUG = import.meta.env.VITE_AUTHENTIK_APP_SLUG as string;
 const CLIENT_ID = import.meta.env.VITE_AUTHENTIK_CLIENT_ID as string;
 
-function base64url(buffer: ArrayBuffer): string {
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-}
-
 function generateVerifier(): string {
-  return base64url(crypto.getRandomValues(new Uint8Array(32)).buffer as ArrayBuffer);
+  const arr = new Uint8Array(32);
+  // crypto.getRandomValues works on HTTP; crypto.subtle (S256 hashing) requires HTTPS
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(arr);
+  } else {
+    for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
+  }
+  return btoa(String.fromCharCode(...arr)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
-async function generateChallenge(verifier: string): Promise<string> {
-  const data = new TextEncoder().encode(verifier);
-  return base64url(await crypto.subtle.digest('SHA-256', data));
+async function buildChallenge(verifier: string): Promise<{ challenge: string; method: string }> {
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    const data = new TextEncoder().encode(verifier);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    const challenge = btoa(String.fromCharCode(...new Uint8Array(hash)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    return { challenge, method: 'S256' };
+  }
+  // HTTP fallback: plain method (verifier == challenge)
+  return { challenge: verifier, method: 'plain' };
 }
 
 export async function login(returnTo = '/'): Promise<void> {
   const verifier = generateVerifier();
-  const challenge = await generateChallenge(verifier);
+  const { challenge, method } = await buildChallenge(verifier);
   sessionStorage.setItem('pkce_verifier', verifier);
   sessionStorage.setItem('pkce_return_to', returnTo);
   const params = new URLSearchParams({
@@ -29,7 +36,7 @@ export async function login(returnTo = '/'): Promise<void> {
     redirect_uri: `${location.origin}/callback`,
     scope: 'openid profile email',
     code_challenge: challenge,
-    code_challenge_method: 'S256',
+    code_challenge_method: method,
   });
   location.href = `${AUTHENTIK_URL}/application/o/authorize/?${params}`;
 }

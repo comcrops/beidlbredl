@@ -2,6 +2,7 @@ import { writable } from 'svelte/store';
 
 export interface User {
   username: string;
+  avatar_url: string | null;
 }
 
 export const userStore = writable<User | null>(null);
@@ -12,6 +13,21 @@ export async function fetchUser(token: string): Promise<User | null> {
   });
   if (resp.status === 404) return null;
   if (!resp.ok) throw new Error('Failed to fetch user profile');
+  return resp.json();
+}
+
+export async function uploadAvatar(token: string, file: File): Promise<User> {
+  const body = new FormData();
+  body.append('avatar', file);
+  const resp = await fetch('/api/users/me/avatar', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body,
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error ?? 'Upload failed');
+  }
   return resp.json();
 }
 

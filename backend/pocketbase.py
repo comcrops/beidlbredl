@@ -108,3 +108,32 @@ def ensure_collection(
 
     log.error('ensure_collection %s gave up after 6 attempts', name)
     _collection_ready.add(name)
+
+
+def ensure_field(collection_name: str, field: dict) -> None:
+    """Add a field to an existing collection if it isn't already there."""
+    try:
+        token = admin_token()
+        if not token:
+            return
+        headers = {'Authorization': f'Bearer {token}'}
+        resp = requests.get(f'{PB_URL}/api/collections/{collection_name}', headers=headers, timeout=5)
+        if not resp.ok:
+            return
+        schema = resp.json()
+        fields = schema.get('fields', [])
+        if any(f.get('name') == field['name'] for f in fields):
+            return
+        fields.append(field)
+        r = requests.patch(
+            f'{PB_URL}/api/collections/{collection_name}',
+            headers=headers,
+            json={'fields': fields},
+            timeout=5,
+        )
+        if r.ok:
+            log.warning('Added field %s to %s', field['name'], collection_name)
+        else:
+            log.warning('Failed to add field %s to %s: %s', field['name'], collection_name, r.text)
+    except Exception as e:
+        log.error('ensure_field %s.%s: %s', collection_name, field['name'], e)

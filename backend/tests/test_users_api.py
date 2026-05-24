@@ -25,7 +25,7 @@ def test_get_me_returns_user(client):
          patch('users.get_user', return_value={'username': 'TestUser'}):
         resp = client.get('/api/users/me', headers=_auth_header())
     assert resp.status_code == 200
-    assert resp.get_json() == {'username': 'TestUser'}
+    assert resp.get_json() == {'username': 'TestUser', 'avatar_url': None}
 
 
 def test_get_me_returns_404_for_new_user(client):

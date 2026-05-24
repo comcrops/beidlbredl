@@ -2,9 +2,11 @@
   import { onMount, onDestroy } from 'svelte';
   import { appsSocket } from '$lib/socket';
 
-  let users = $state<string[]>([]);
+  interface OnlineUser { username: string; avatar_url: string | null; }
 
-  function handleUpdate(data: { users: string[] }) {
+  let users = $state<OnlineUser[]>([]);
+
+  function handleUpdate(data: { users: OnlineUser[] }) {
     users = data.users;
   }
 
@@ -19,7 +21,14 @@
   {:else}
     <ul>
       {#each users as user}
-        <li>👤 {user}</li>
+        <li>
+          {#if user.avatar_url}
+            <img src="{user.avatar_url}?thumb=64x64" alt="" class="avatar" />
+          {:else}
+            <div class="avatar placeholder">{user.username[0].toUpperCase()}</div>
+          {/if}
+          {user.username}
+        </li>
       {/each}
     </ul>
   {/if}
@@ -38,10 +47,7 @@
     font-family: sans-serif;
   }
 
-  h2 {
-    font-size: 2rem;
-    margin: 0 0 2rem;
-  }
+  h2 { font-size: 2rem; margin: 0 0 2rem; }
 
   ul {
     list-style: none;
@@ -49,15 +55,32 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem;
   }
 
   li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
     font-size: 1.5rem;
   }
 
-  .empty {
-    font-size: 1.5rem;
-    color: #555;
+  .avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
   }
+
+  .avatar.placeholder {
+    background: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #aaa;
+  }
+
+  .empty { font-size: 1.5rem; color: #555; }
 </style>

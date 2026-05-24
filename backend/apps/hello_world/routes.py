@@ -5,6 +5,7 @@ import os
 import logging
 
 import pocketbase
+import users as users_module
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ PB_COLLECTION = 'hello_world_messages'
 _FIELDS = [
     {'name': 'text', 'type': 'text', 'required': True},
     {'name': 'sender', 'type': 'text', 'required': False},
+    {'name': 'avatar_url', 'type': 'text', 'required': False},
     {'name': 'created', 'type': 'autodate', 'onCreate': True, 'onUpdate': False},
 ]
 
@@ -33,7 +35,11 @@ def _recent_messages(limit: int = 20) -> list[dict]:
         )
         if resp.ok:
             return [
-                {'text': item['text'], 'sender': item.get('sender', '')}
+                {
+                    'text': item['text'],
+                    'sender': item.get('sender', ''),
+                    'avatar_url': item.get('avatar_url') or None,
+                }
                 for item in resp.json().get('items', [])
             ]
         log.warning('_recent_messages failed: %s %s', resp.status_code, resp.text)
@@ -42,12 +48,16 @@ def _recent_messages(limit: int = 20) -> list[dict]:
     return []
 
 
-def _save_message(text: str, sender: str = ''):
+def _save_message(text: str, sender: str = '', user_sub: str = ''):
     _ensure()
+    av_url = None
+    if user_sub:
+        user = users_module.get_user(user_sub)
+        av_url = users_module.avatar_url(user) if user else None
     try:
         r = requests.post(
             f'{PB_URL}/api/collections/{PB_COLLECTION}/records',
-            json={'text': text, 'sender': sender},
+            json={'text': text, 'sender': sender, 'avatar_url': av_url or ''},
             timeout=5,
         )
         if not r.ok:
@@ -65,7 +75,8 @@ def handle_update_message(data):
     from sockets.middleware import get_session
     session = get_session(request.sid)
     sender = session.get('username', '') if session else ''
-    _save_message(message, sender)
+    user_sub = session.get('user_sub', '') if session else ''
+    _save_message(message, sender, user_sub)
     socketio.emit(
         'hello_world:messages_updated',
         {'messages': _recent_messages()},

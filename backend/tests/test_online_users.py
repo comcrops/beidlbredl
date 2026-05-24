@@ -47,7 +47,8 @@ def test_broadcast_on_connect(socket_client):
     received = socket_client.get_received('/apps')
     updates = [e for e in received if e['name'] == 'online_users:updated']
     assert updates
-    assert 'bob' in updates[-1]['args'][0]['users']
+    usernames = [u['username'] for u in updates[-1]['args'][0]['users']]
+    assert 'bob' in usernames
 
 
 def test_broadcast_on_disconnect(socket_client):
@@ -57,4 +58,5 @@ def test_broadcast_on_disconnect(socket_client):
     received = socket_client.get_received('/apps')
     updates = [e for e in received if e['name'] == 'online_users:updated']
     assert updates
-    assert 'bob' not in updates[-1]['args'][0]['users']
+    usernames = [u['username'] for u in updates[-1]['args'][0]['users']]
+    assert 'bob' not in usernames

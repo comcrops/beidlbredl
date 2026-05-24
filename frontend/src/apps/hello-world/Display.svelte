@@ -5,12 +5,14 @@
   interface Message {
     text: string;
     sender: string;
+    avatar_url: string | null;
   }
 
   interface Bubble {
     id: number;
     text: string;
     sender: string;
+    avatar_url: string | null;
     left: number;
     top: number;
     dur: number;
@@ -49,6 +51,7 @@
         id,
         text: msg.text,
         sender: msg.sender,
+        avatar_url: msg.avatar_url ?? null,
         left: 4 + Math.random() * 68,
         top: 10 + Math.random() * 62,
         dur,
@@ -98,7 +101,12 @@
     >
       <div class="bubble-text">{bubble.text}</div>
       {#if bubble.sender}
-        <div class="bubble-sender">— {bubble.sender}</div>
+        <div class="bubble-sender">
+          {#if bubble.avatar_url}
+            <img src="{bubble.avatar_url}?thumb=32x32" alt="" class="bubble-avatar" />
+          {/if}
+          {bubble.sender}
+        </div>
       {/if}
     </div>
   {/each}
@@ -136,10 +144,21 @@
   }
 
   .bubble-sender {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
     font-size: 0.75em;
     color: #555;
     margin-top: 0.3rem;
-    text-align: right;
+  }
+
+  .bubble-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
   }
 
   /* thought bubble tail: two decreasing circles */

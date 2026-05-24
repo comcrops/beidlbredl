@@ -64,7 +64,14 @@
     <div class="header-left">
       <h1>Beidlboard</h1>
       {#if $userStore}
-        <a class="username" href="/profile">{$userStore.username}</a>
+        <a class="user-link" href="/profile">
+          {#if $userStore.avatar_url}
+            <img src="{$userStore.avatar_url}?thumb=40x40" alt="" class="header-avatar" />
+          {:else}
+            <div class="header-avatar placeholder">{$userStore.username[0].toUpperCase()}</div>
+          {/if}
+          <span class="username">{$userStore.username}</span>
+        </a>
       {/if}
     </div>
     <div class="header-right">
@@ -418,13 +425,34 @@
     gap: 0.5rem;
   }
 
-  .username {
-    font-size: 0.8rem;
-    color: #666;
+  .user-link {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     text-decoration: none;
   }
 
-  .username:hover {
+  .header-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .header-avatar.placeholder {
+    background: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
     color: #aaa;
   }
+
+  .username {
+    font-size: 0.8rem;
+    color: #666;
+  }
+
+  .user-link:hover .username { color: #aaa; }
 </style>

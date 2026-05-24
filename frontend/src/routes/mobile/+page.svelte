@@ -7,12 +7,17 @@
   import { fetchUser, userStore } from '$lib/stores/user';
   import { goto } from '$app/navigation';
 
-  let launcherOpen = false;
+  let launcherOpen = $state(false);
+  let loginError = $state('');
 
   onMount(async () => {
     const token = getToken();
     if (!token) {
-      login('/mobile');
+      try {
+        await login('/mobile');
+      } catch (e) {
+        loginError = String(e);
+      }
       return;
     }
     const user = await fetchUser(token).catch(() => null);
@@ -41,8 +46,18 @@
     generalSocket.emit('toggle_lock');
   }
 
-  $: closedApps = apps.filter(a => !$kioskState.openAppIds.includes(a.id));
+  const closedApps = $derived(apps.filter(a => !$kioskState.openAppIds.includes(a.id)));
 </script>
+
+{#if loginError}
+  <div style="padding:2rem;color:#f88;font-family:monospace;word-break:break-all">
+    Login Fehler: {loginError}
+    <br><br>
+    <button onclick={() => login('/mobile')} style="padding:.5rem 1rem;background:#333;color:#fff;border:1px solid #555;border-radius:6px;cursor:pointer">
+      Nochmal probieren
+    </button>
+  </div>
+{/if}
 
 <div class="mobile-controller">
   <header>
@@ -56,12 +71,12 @@
       <button
         class="lock-btn"
         class:locked={$kioskState.locked}
-        on:click={toggleLock}
+        onclick={toggleLock}
         aria-label={$kioskState.locked ? 'Entsperren' : 'Sperren'}
       >
         {$kioskState.locked ? '🔒' : '🔓'}
       </button>
-      <button class="launcher-btn" on:click={() => (launcherOpen = true)} aria-label="Apps öffnen">
+      <button class="launcher-btn" onclick={() => (launcherOpen = true)} aria-label="Apps öffnen">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
           <rect x="2" y="2" width="6" height="6" rx="1.5" />
           <rect x="12" y="2" width="6" height="6" rx="1.5" />
@@ -80,8 +95,8 @@
           <div class="card-header">
             <span class="app-identity">{app.icon} {app.name}</span>
             <div class="card-actions">
-              <button class="kiosk-btn" on:click={() => openInKiosk(appId)}>Am Kiosk zeigen</button>
-              <button class="close-btn" on:click={() => closeApp(appId)}>Schließen</button>
+              <button class="kiosk-btn" onclick={() => openInKiosk(appId)}>Am Kiosk zeigen</button>
+              <button class="close-btn" onclick={() => closeApp(appId)}>Schließen</button>
             </div>
           </div>
           {#if app.hasMobileControls && app.mobileControls}
@@ -104,12 +119,12 @@
 <!-- Launcher overlay -->
 {#if launcherOpen}
   <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-  <div class="backdrop" on:click={() => (launcherOpen = false)}></div>
+  <div class="backdrop" onclick={() => (launcherOpen = false)}></div>
   <div class="launcher-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <span>Apps</span>
-      <button class="close-sheet-btn" on:click={() => (launcherOpen = false)}>✕</button>
+      <button class="close-sheet-btn" onclick={() => (launcherOpen = false)}>✕</button>
     </div>
     <div class="app-list">
       {#if closedApps.length === 0}
@@ -118,7 +133,7 @@
         {#each closedApps as app}
           <div class="app-item">
             <span class="app-label">{app.icon} {app.name}</span>
-            <button class="open-btn" on:click={() => openApp(app.id)}>Öffnen</button>
+            <button class="open-btn" onclick={() => openApp(app.id)}>Öffnen</button>
           </div>
         {/each}
       {/if}

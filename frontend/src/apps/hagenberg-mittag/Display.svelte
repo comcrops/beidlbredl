@@ -4,8 +4,6 @@
   import { RESTAURANTS } from './restaurants';
 
   let focusedId = $state<string | null>(null);
-  let weekMode = $state(false);
-  let widgetKey = $state(0);
   let countdown = $state(0);
   let countdownTimer: ReturnType<typeof setInterval> | null = null;
   let emptyCards = $state(new Set<string>());
@@ -21,19 +19,11 @@
   }
 
   function loadSdk() {
-    const existing = document.querySelector('script[src*="mittag.io/e/js"]');
-    if (existing) existing.remove();
     const s = document.createElement('script');
     s.src = 'https://www.mittag.io/e/js';
     s.onload = () => setTimeout(checkEmpty, 3000);
     document.head.appendChild(s);
   }
-
-  $effect(() => {
-    // re-runs after DOM update whenever widgetKey changes
-    widgetKey;
-    loadSdk();
-  });
 
   function clearFocus() {
     focusedId = null;
@@ -54,19 +44,14 @@
     if (data.id === null) { clearFocus(); return; }
     startFocus(data.id);
   }
-  function handleSetWeekMode(data: { week: boolean }) {
-    weekMode = data.week;
-    widgetKey++;
-  }
 
   onMount(() => {
     appsSocket.on('hagenberg_mittag:focus', handleFocus);
-    appsSocket.on('hagenberg_mittag:set_week_mode', handleSetWeekMode);
+    loadSdk();
   });
 
   onDestroy(() => {
     appsSocket.off('hagenberg_mittag:focus', handleFocus);
-    appsSocket.off('hagenberg_mittag:set_week_mode', handleSetWeekMode);
     clearFocus();
   });
 </script>
@@ -90,14 +75,7 @@
           {/if}
         </div>
         <div class="widget-wrap">
-          {#key widgetKey}
-            <a
-              class="mittagio"
-              href={r.mittagUrl}
-              data-minimal
-              data-week={weekMode ? '' : undefined}
-            >{r.name} Mittagessen</a>
-          {/key}
+          <a class="mittagio" href={r.mittagUrl} data-minimal></a>
           {#if emptyCards.has(r.id)}
             <div class="empty-state">Koa Mittagessen heut 🍺</div>
           {/if}
@@ -199,8 +177,24 @@
     padding: 1rem;
   }
 
-  /* mittag.io widget overrides — keep readable on dark bg */
-  .widget-wrap :global(body),
+  /* View-only kiosk: no interaction with widget internals */
+  .widget-wrap {
+    pointer-events: none;
+  }
+
+  /* Hide all interactive / navigation elements from the widget */
+  .widget-wrap :global(button),
+  .widget-wrap :global(a):not(.mittagio),
+  .widget-wrap :global([class*="profil"]),
+  .widget-wrap :global([class*="Profil"]),
+  .widget-wrap :global([class*="footer"]),
+  .widget-wrap :global([class*="Footer"]),
+  .widget-wrap :global([class*="branding"]),
+  .widget-wrap :global([class*="logo"]) {
+    display: none !important;
+  }
+
+  /* Keep widget text readable */
   .widget-wrap :global(*) {
     color-scheme: light;
   }

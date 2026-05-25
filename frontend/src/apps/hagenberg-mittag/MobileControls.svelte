@@ -7,6 +7,7 @@
 
   let focusedId = $state<string | null>(null);
   let weekMode = $state(false);
+  let focusTimer: ReturnType<typeof setTimeout> | null = null;
 
   function focus(id: string) {
     socket.emit('hagenberg_mittag:focus', { id });
@@ -17,7 +18,11 @@
     socket.emit('hagenberg_mittag:set_week_mode', { week: next });
   }
 
-  function handleFocus(data: { id: string }) { focusedId = data.id; setTimeout(() => { focusedId = null; }, 15000); }
+  function handleFocus(data: { id: string }) {
+    focusedId = data.id;
+    if (focusTimer) clearTimeout(focusTimer);
+    focusTimer = setTimeout(() => { focusedId = null; focusTimer = null; }, 15000);
+  }
   function handleSetWeekMode(data: { week: boolean }) { weekMode = data.week; }
 
   onMount(() => {
@@ -28,6 +33,7 @@
   onDestroy(() => {
     socket.off('hagenberg_mittag:focus', handleFocus);
     socket.off('hagenberg_mittag:set_week_mode', handleSetWeekMode);
+    if (focusTimer) clearTimeout(focusTimer);
   });
 </script>
 

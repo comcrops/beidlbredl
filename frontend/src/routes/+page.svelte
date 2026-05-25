@@ -74,6 +74,13 @@
     </div>
   {/if}
 
+  <!-- persistent branding watermark -->
+  <div class="watermark" class:faded={$kioskState.openAppIds.length > 0}>
+    <!-- logo placeholder: replace with <img src="/logo.svg" alt="" class="watermark-logo" /> -->
+    <span class="watermark-icon">🎛️</span>
+    <span class="watermark-name">Beidlbredl</span>
+  </div>
+
   {#if $kioskState.openAppIds.length > 0}
     <div class="carousel-bar" class:idle-active={!$kioskState.locked && $kioskState.openAppIds.length >= 2} class:locked={$kioskState.locked}>
       {#key idleKey}
@@ -157,6 +164,40 @@
     font-size: clamp(0.9rem, 1.5vw, 1.25rem);
     color: rgba(255, 255, 255, 0.2);
     margin: 0;
+  }
+
+  /* ── Persistent branding watermark ── */
+  .watermark {
+    position: absolute;
+    top: 1.1rem;
+    left: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    z-index: 10;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+    opacity: 1;
+  }
+
+  .watermark.faded {
+    opacity: 0.18;
+  }
+
+  .watermark-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  /* swap for real logo: */
+  /* .watermark-logo { height: 1.5rem; width: auto; } */
+
+  .watermark-name {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #fff;
+    text-transform: lowercase;
   }
 
   /* Carousel indicator */

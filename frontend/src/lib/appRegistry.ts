@@ -4,6 +4,8 @@ import HelloWorldMobileControls from '../apps/hello-world/MobileControls.svelte'
 import RotAppDisplay from '../apps/rot-app/Display.svelte';
 import BlauAppDisplay from '../apps/blau-app/Display.svelte';
 import OnlineUsersDisplay from '../apps/online-users/Display.svelte';
+import HagenbergMittagDisplay from '../apps/hagenberg-mittag/Display.svelte';
+import HagenbergMittagMobileControls from '../apps/hagenberg-mittag/MobileControls.svelte';
 
 export interface AppDefinition {
   id: string;
@@ -43,6 +45,14 @@ export const apps: AppDefinition[] = [
     icon: '👥',
     hasMobileControls: false,
     display: OnlineUsersDisplay,
+  },
+  {
+    id: 'hagenberg-mittag',
+    name: 'Hagenberger Mittagessen',
+    icon: '🍽️',
+    hasMobileControls: true,
+    display: HagenbergMittagDisplay,
+    mobileControls: HagenbergMittagMobileControls,
   },
 ];
 

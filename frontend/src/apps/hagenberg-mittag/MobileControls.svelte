@@ -6,10 +6,15 @@
   let { socket }: { socket: Socket } = $props();
 
   let focusedId = $state<string | null>(null);
+  let weekMode = $state(false);
   let focusTimer: ReturnType<typeof setTimeout> | null = null;
 
   function focus(id: string) {
     socket.emit('hagenberg_mittag:focus', { id: focusedId === id ? null : id });
+  }
+
+  function toggleWeek() {
+    socket.emit('hagenberg_mittag:set_week_mode', { week: !weekMode });
   }
 
   function handleFocus(data: { id: string | null }) {
@@ -23,12 +28,16 @@
     focusTimer = setTimeout(() => { focusedId = null; focusTimer = null; }, 15000);
   }
 
+  function handleSetWeekMode(data: { week: boolean }) { weekMode = data.week; }
+
   onMount(() => {
     socket.on('hagenberg_mittag:focus', handleFocus);
+    socket.on('hagenberg_mittag:set_week_mode', handleSetWeekMode);
   });
 
   onDestroy(() => {
     socket.off('hagenberg_mittag:focus', handleFocus);
+    socket.off('hagenberg_mittag:set_week_mode', handleSetWeekMode);
     if (focusTimer) clearTimeout(focusTimer);
   });
 </script>
@@ -47,6 +56,16 @@
     {/each}
   </div>
 
+
+  {#if focusedId}
+    <div class="divider"></div>
+    <div class="week-toggle">
+      <span class="toggle-label">{weekMode ? 'Ganze Wochn' : 'Heut'}</span>
+      <button class="toggle-btn" class:active={weekMode} onclick={toggleWeek}>
+        {weekMode ? 'Nur heut' : 'Ganze Wochn'}
+      </button>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -86,6 +105,39 @@
     background: #2d6a4f;
     border-color: #3d8a6f;
     color: #fff;
+  }
+
+  .divider {
+    height: 1px;
+    background: #333;
+  }
+
+  .week-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .toggle-label {
+    font-size: 0.9rem;
+    color: #ccc;
+  }
+
+  .toggle-btn {
+    padding: 0.5rem 1rem;
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .toggle-btn.active {
+    background: #1e3a5f;
+    border-color: #2e5a8f;
   }
 
 </style>

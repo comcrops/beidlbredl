@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-beidlboard is a kiosk dashboard that runs on a Raspberry Pi with a monitor. A single shared display shows the active app; users control it from their phones via a mobile web UI. UI text is in Upper-Austrian dialect.
+beidlbredl is a kiosk dashboard that runs on a Raspberry Pi with a monitor. A single shared display shows the active app; users control it from their phones via a mobile web UI. UI text is in Upper-Austrian dialect.
 
 ## Commands
 

@@ -62,7 +62,7 @@
 <div class="mobile-controller">
   <header>
     <div class="header-left">
-      <h1>Beidlboard</h1>
+      <h1>Beidlbredl</h1>
       {#if $userStore}
         <a class="user-link" href="/profile">
           {#if $userStore.avatar_url}

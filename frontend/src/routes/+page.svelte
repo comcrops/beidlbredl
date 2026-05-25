@@ -65,7 +65,12 @@
 
   {#if $kioskState.openAppIds.length === 0}
     <div class="empty-state">
-      <p>Koa App offen. Mach oan auf mit deim Handy!</p>
+      <div class="brand">
+        <!-- logo placeholder: replace with <img src="/logo.svg" alt="Beidlbredl" class="brand-logo" /> -->
+        <div class="brand-logo-placeholder">🎛️</div>
+        <div class="brand-name">Beidlbredl</div>
+      </div>
+      <p class="brand-hint">Koa App offen. Mach oan auf mit deim Handy!</p>
     </div>
   {/if}
 
@@ -116,11 +121,42 @@
 
   .empty-state {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100%;
-    font-size: 1.5rem;
-    color: #666;
+    gap: 1.5rem;
+  }
+
+  .brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    user-select: none;
+  }
+
+  .brand-logo-placeholder {
+    font-size: clamp(4rem, 10vw, 8rem);
+    opacity: 0.15;
+    line-height: 1;
+  }
+
+  /* swap this out when you have a real logo: */
+  /* .brand-logo { width: clamp(80px, 15vw, 180px); opacity: 0.2; } */
+
+  .brand-name {
+    font-size: clamp(2rem, 5vw, 4.5rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.12);
+    text-transform: lowercase;
+  }
+
+  .brand-hint {
+    font-size: clamp(0.9rem, 1.5vw, 1.25rem);
+    color: rgba(255, 255, 255, 0.2);
+    margin: 0;
   }
 
   /* Carousel indicator */

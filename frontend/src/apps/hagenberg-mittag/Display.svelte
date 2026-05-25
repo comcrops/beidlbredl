@@ -5,7 +5,6 @@
 
   let focusedId = $state<string | null>(null);
   let weekMode = $state(false);
-  let widgetKey = $state(0);
   let countdown = $state(0);
   let countdownTimer: ReturnType<typeof setInterval> | null = null;
   let emptyCards = $state(new Set<string>());
@@ -14,25 +13,11 @@
   function checkEmpty() {
     if (!gridEl) return;
     const newEmpty = new Set<string>();
-    gridEl.querySelectorAll<HTMLElement>('.widget-wrap').forEach((wrap, i) => {
+    gridEl.querySelectorAll<HTMLElement>('.widget-today').forEach((wrap, i) => {
       if (wrap.scrollHeight < 40) newEmpty.add(RESTAURANTS[i]?.id ?? '');
     });
     emptyCards = newEmpty;
   }
-
-  function loadSdk() {
-    const existing = document.querySelector('script[src*="mittag.io/e/js"]');
-    if (existing) existing.remove();
-    const s = document.createElement('script');
-    s.src = 'https://www.mittag.io/e/js';
-    s.onload = () => setTimeout(checkEmpty, 3000);
-    document.head.appendChild(s);
-  }
-
-  $effect(() => {
-    widgetKey;
-    loadSdk();
-  });
 
   function clearFocus() {
     focusedId = null;
@@ -56,12 +41,17 @@
 
   function handleSetWeekMode(data: { week: boolean }) {
     weekMode = data.week;
-    widgetKey++;
   }
 
   onMount(() => {
     appsSocket.on('hagenberg_mittag:focus', handleFocus);
     appsSocket.on('hagenberg_mittag:set_week_mode', handleSetWeekMode);
+
+    // Load SDK exactly once — it scans all .mittagio anchors in one pass
+    const s = document.createElement('script');
+    s.src = 'https://www.mittag.io/e/js';
+    s.onload = () => setTimeout(checkEmpty, 3000);
+    document.head.appendChild(s);
   });
 
   onDestroy(() => {
@@ -82,6 +72,7 @@
         class="card"
         class:focused={focusedId === r.id}
         class:dimmed={focusedId !== null && focusedId !== r.id}
+        class:week-mode={focusedId === r.id && weekMode}
       >
         <div class="card-header">
           <span class="restaurant-name">{r.name}</span>
@@ -90,10 +81,13 @@
           {/if}
         </div>
         <div class="widget-wrap">
-          {#key widgetKey}
-            <a class="mittagio" href={r.mittagUrl} data-minimal
-              data-week={r.id === focusedId && weekMode ? '' : undefined}></a>
-          {/key}
+          <!-- Both widgets rendered once on mount; CSS controls which is visible -->
+          <div class="widget-today">
+            <a class="mittagio" href={r.mittagUrl} data-minimal></a>
+          </div>
+          <div class="widget-week">
+            <a class="mittagio" href={r.mittagUrl} data-minimal data-week></a>
+          </div>
           {#if emptyCards.has(r.id)}
             <div class="empty-state">Koa Mittagessen heut 🍺</div>
           {/if}
@@ -180,33 +174,39 @@
 
   .widget-wrap {
     flex: 1;
-    overflow: auto;
+    overflow: hidden;
     min-height: 0;
-  }
-
-  .empty-state {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    font-size: clamp(0.8rem, 1.5vw, 1.1rem);
-    color: rgba(255, 255, 255, 0.35);
-    text-align: center;
-    padding: 1rem;
-  }
-
-  /* Grid cards: view-only, no interaction */
-  .widget-wrap {
     pointer-events: none;
+    position: relative;
   }
 
-  /* Focused spotlight card: allow scrolling through full week menu */
+  /* Focused card: scrollable */
   .card.focused .widget-wrap {
     pointer-events: auto;
     overflow-y: auto;
   }
 
-  /* Hide all interactive / navigation elements from the widget */
+  /* Default: show today, hide week */
+  .widget-week { display: none; }
+
+  /* Focused + week mode: show week, hide today */
+  .card.focused.week-mode .widget-today { display: none; }
+  .card.focused.week-mode .widget-week  { display: block; }
+
+  .empty-state {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(0.8rem, 1.5vw, 1.1rem);
+    color: rgba(255, 255, 255, 0.35);
+    text-align: center;
+    padding: 1rem;
+    pointer-events: none;
+  }
+
+  /* Hide interactive / navigation elements inside the widget */
   .widget-wrap :global(button),
   .widget-wrap :global(a):not(.mittagio),
   .widget-wrap :global([class*="profil"]),
@@ -218,7 +218,6 @@
     display: none !important;
   }
 
-  /* Keep widget text readable */
   .widget-wrap :global(*) {
     color-scheme: light;
   }

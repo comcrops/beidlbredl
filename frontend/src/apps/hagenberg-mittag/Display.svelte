@@ -50,7 +50,10 @@
     }, 1000);
   }
 
-  function handleFocus(data: { id: string }) { startFocus(data.id); }
+  function handleFocus(data: { id: string | null }) {
+    if (data.id === null) { clearFocus(); return; }
+    startFocus(data.id);
+  }
   function handleSetWeekMode(data: { week: boolean }) {
     weekMode = data.week;
     widgetKey++;

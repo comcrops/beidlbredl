@@ -10,7 +10,7 @@
   let focusTimer: ReturnType<typeof setTimeout> | null = null;
 
   function focus(id: string) {
-    socket.emit('hagenberg_mittag:focus', { id });
+    socket.emit('hagenberg_mittag:focus', { id: focusedId === id ? null : id });
   }
 
   function toggleWeek() {
@@ -18,7 +18,12 @@
     socket.emit('hagenberg_mittag:set_week_mode', { week: next });
   }
 
-  function handleFocus(data: { id: string }) {
+  function handleFocus(data: { id: string | null }) {
+    if (data.id === null) {
+      focusedId = null;
+      if (focusTimer) { clearTimeout(focusTimer); focusTimer = null; }
+      return;
+    }
     focusedId = data.id;
     if (focusTimer) clearTimeout(focusTimer);
     focusTimer = setTimeout(() => { focusedId = null; focusTimer = null; }, 15000);

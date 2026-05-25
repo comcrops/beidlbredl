@@ -59,3 +59,15 @@ Open apps stay mounted in the DOM (CSS `display:none`) — only the active one i
 
 ### Testing notes
 Flask-SocketIO tests use `async_mode='threading'` (set in `conftest.py`) — gevent hangs in test environments. Socket.IO test clients from `socketio.test_client(app, namespace='/general')` are the standard pattern; see existing tests for reference.
+
+### Authentication (Authentik OIDC)
+Authorize/token URLs are global — no app slug in path: `{AUTHENTIK_URL}/application/o/authorize/` and `.../token/`. Authentik signs JWTs with ES256 (not RS256) — `auth.py` accepts both. `crypto.subtle` (needed for PKCE S256) requires HTTPS; `auth.ts` falls back to `plain` method on HTTP.
+
+### PocketBase
+The built-in `users` auth collection conflicts with custom collections — project uses `bb_users`. File uploads require an admin token + multipart PATCH. Schema migrations use `pocketbase.ensure_field(collection, field)` — checks existing schema and PATCHes only if the field is missing. Avatar URLs are proxied via nginx at `/pb-files/{collection}/{record_id}/{filename}`.
+
+### Flask-SocketIO
+`on_disconnect` handlers must accept `reason=None` — newer versions pass a reason argument.
+
+### Frontend (Svelte 5 runes)
+All components use Svelte 5 runes mode: `$state()`, `$derived()`, `onclick=` (not `on:click`). No `$:` reactive statements.

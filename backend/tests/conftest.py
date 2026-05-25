@@ -9,7 +9,7 @@ from app import create_app
 from config import TestConfig
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def flask_app():
     app = create_app({'TESTING': True, 'SECRET_KEY': 'test', 'SOCKETIO_ASYNC_MODE': 'threading'})
     yield app

@@ -9,10 +9,12 @@
   let countdown = $state(0);
   let countdownTimer: ReturnType<typeof setInterval> | null = null;
   let emptyCards = $state(new Set<string>());
+  let gridEl = $state<HTMLElement | null>(null);
 
   function checkEmpty() {
+    if (!gridEl) return;
     const newEmpty = new Set<string>();
-    document.querySelectorAll<HTMLElement>('.widget-wrap').forEach((wrap, i) => {
+    gridEl.querySelectorAll<HTMLElement>('.widget-wrap').forEach((wrap, i) => {
       if (wrap.scrollHeight < 40) newEmpty.add(RESTAURANTS[i]?.id ?? '');
     });
     emptyCards = newEmpty;
@@ -71,7 +73,7 @@
     <div class="backdrop" onclick={clearFocus}></div>
   {/if}
 
-  <div class="grid">
+  <div class="grid" bind:this={gridEl}>
     {#each RESTAURANTS as r (r.id)}
       <div
         class="card"
@@ -149,6 +151,7 @@
     border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
     transition: none;
+    background: #1e1e1e;
   }
 
   .card.dimmed {

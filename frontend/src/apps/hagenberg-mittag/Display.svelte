@@ -186,12 +186,12 @@
     overflow-y: auto;
   }
 
-  /* Default: show today, hide week */
-  .widget-week { display: none; }
+  /* Default: today visible, week loaded but hidden (visibility keeps iframe loading) */
+  .widget-week { visibility: hidden; height: 0; overflow: hidden; }
 
-  /* Focused + week mode: show week, hide today */
-  .card.focused.week-mode .widget-today { display: none; }
-  .card.focused.week-mode .widget-week  { display: block; }
+  /* Focused + week mode: swap visibility */
+  .card.focused.week-mode .widget-today { visibility: hidden; height: 0; overflow: hidden; }
+  .card.focused.week-mode .widget-week  { visibility: visible; height: auto; overflow: visible; }
 
   .empty-state {
     position: absolute;
